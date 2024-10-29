@@ -1,0 +1,27 @@
+#!/bin/sh
+cd "${0%/*}" || exit                                # Run from this directory
+. ${WM_PROJECT_DIR:?}/bin/tools/RunFunctions        # Tutorial run functions
+#------------------------------------------------------------------------------
+
+restore0Dir
+
+# Run blockMesh to create the mesh
+runApplication blockMesh
+
+# Run snappyHexMesh with the overwrite option to modify the mesh
+runApplication "snappyHexMesh -overwrite"
+
+# Copy the initial conditions from 0.orig to 0
+cp -R 0.orig 0
+
+# Run setFields to set initial fields
+runApplication setFields
+
+# Decompose the domain for parallel processing
+runApplication decomposePar
+
+# Run the rhoCentralFoam solver in parallel on 8 processors
+mpirun -np 8 rhoCentralFoam -parallel
+
+#------------------------------------------------------------------------------
+
